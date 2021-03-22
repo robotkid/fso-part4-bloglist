@@ -1,4 +1,4 @@
-require('dotenv').config()
+const config = require('./utils/config')
 const express = require('express')
 const cors = require('cors')
 const logger = require('./utils/logger')
@@ -26,7 +26,7 @@ app.post('/api/blogs', (request, response) => {
     })
 })
 
-const PORT = 3003
+const PORT = config.PORT
 app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`)
 })
