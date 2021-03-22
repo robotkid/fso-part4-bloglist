@@ -32,6 +32,11 @@ test('the first blog is about React patterns', async () => {
   expect(response.body[0].title).toBe('React patterns')
 })
 
+test('unique identifier is named "id"', async () => {
+  const response = await api.get('/api/blogs')
+  expect(response.body[0].id).toBeDefined()
+})
+
 afterAll(() => {
   mongoose.connection.close()
 })
