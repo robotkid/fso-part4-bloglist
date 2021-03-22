@@ -3,7 +3,7 @@ const supertest = require('supertest')
 const app = require('../app')
 const api = supertest(app)
 const Blog = require('../models/blog')
-const { blogs: initialBlogs } = require('./testData')
+const { listWithOneBlog, blogs: initialBlogs } = require('./testData')
 
 beforeEach(async () => {
   await Blog.deleteMany({})
@@ -35,6 +35,19 @@ test('the first blog is about React patterns', async () => {
 test('unique identifier is named "id"', async () => {
   const response = await api.get('/api/blogs')
   expect(response.body[0].id).toBeDefined()
+})
+
+test('post new blog works correctly', async () => {
+  await api
+    .post('/api/blogs')
+    .send(listWithOneBlog[0])
+    .expect(201)
+    .expect('Content-type', /application\/json/)
+
+  const response = await api.get('/api/blogs')
+  const contents = response.body.map(r => r.title)
+  expect(response.body).toHaveLength(initialBlogs.length + 1)
+  expect(contents).toContain('A new blog post')
 })
 
 afterAll(() => {
