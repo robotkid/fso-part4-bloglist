@@ -31,12 +31,14 @@ const mostBlogs = (blogList) => {
 const mostLikes = (blogList) => {
   if (blogList.length === 0) { return null }
 
-  const [ author, blogs ] = fp.compose(
+  return fp.compose(
+    fp.fromPairs,
+    fp.zip(['author', 'likes']),
     fp.maxBy(fp.last),
-    fp.entries,
-    fp.countBy('author')
+    fp.toPairs,
+    fp.mapValues(fp.reduce((a, v) => a + v.likes, 0)),
+    fp.groupBy('author'),
   )(blogList)
-  return { author, blogs }
 }
 
 module.exports = {
