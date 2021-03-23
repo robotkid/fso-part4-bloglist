@@ -6,7 +6,7 @@ describe('total likes', () => {
 
   test('of one blog, equals the likes of that', () => {
     const result = listHelper.totalLikes(listWithOneBlog)
-    expect(result).toBe(5)
+    expect(result).toBe(3)
   })
 
   test('of empty list should be 0', () => {
