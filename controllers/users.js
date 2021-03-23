@@ -4,6 +4,11 @@ const User = require('../models/user')
 
 usersRouter.post('/', async (request, response) => {
   const body = request.body
+  if (body.password.length < 3) {
+    response.status(400).json({
+      error: 'password too short'
+    })
+  }
 
   const saltRounds = 10
   const passwordHash = await bcrypt.hash(body.password, saltRounds)
@@ -22,8 +27,13 @@ usersRouter.post('/', async (request, response) => {
 usersRouter.get('/', async (request, response) => {
   const users = await User
     .find({})
-    .populate('notes', { author: 1, title: 1, url: 1, likes: 1 })
+    .populate('blogs', 'title author url likes')
   response.json(users)
+})
+
+usersRouter.delete('/', async (request, response) => {
+  await User.deleteMany({})
+  response.status(204).end()
 })
 
 module.exports = usersRouter
