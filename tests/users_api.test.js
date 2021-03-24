@@ -5,13 +5,15 @@ const api = supertest(app)
 const bcrypt = require('bcrypt')
 const helper = require('./tests_helper')
 const User = require('../models/user')
+const Blog = require('../models/blog')
 
 describe('when there is initially one user in db', () => {
   beforeEach(async () => {
     await User.deleteMany({})
+    await Blog.deleteMany({})
 
     const passwordHash = await bcrypt.hash('sekret', 10)
-    const user = new User({ username: 'root', passwordHash })
+    const user = new User({ username: 'root', user: 'bob', passwordHash })
 
     await user.save()
   })
@@ -62,7 +64,7 @@ describe('when there is initially one user in db', () => {
   test('creation fails if username is less than three characters', async () => {
     const newUser = {
       username: 'xy',
-      name: 'Superuser',
+      name: 'Username TooShort',
       password: 'superamazing',
     }
 
@@ -74,9 +76,25 @@ describe('when there is initially one user in db', () => {
 
     expect(result.body.error).toContain('is shorter than the minimum')
   })
+
+  test('creation fails if password is less than three characters', async () => {
+    const newUser = {
+      username: 'xyz',
+      name: 'Password TooShort',
+      password: 'ab',
+    }
+
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    expect(result.body.error).toContain('password too short')
+  })
+
 })
 
-afterAll(() => {
-  console.log('closing connection')
+afterAll( () => {
   mongoose.connection.close()
 })
