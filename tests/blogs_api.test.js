@@ -129,23 +129,45 @@ describe('addition of a new blog', () => {
 describe('deletion of a blog', () => {
   const sandbox = {}
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await User.deleteMany({})
+    await Blog.deleteMany({})
 
     await api
       .post('/api/users')
       .send({ username: 'root', name: 'bob', password: 'sekret' })
 
+    await api
+      .post('/api/users')
+      .send({ username: 'hacker', name: 'Cyber', password: 'l33t' })
+
     const user = await api
       .post('/api/login')
       .send({ username: 'root', password: 'sekret' })
 
+    const user2 = await api
+      .post('/api/login')
+      .send({ username: 'hacker', password: 'l33t' })
+
     sandbox.user = user.body
+    sandbox.user2 = user2.body
+
+    const blog = await api
+      .post('/api/blogs')
+      .set('Authorization', `Bearer ${sandbox.user.token}`)
+      .send({ title: 'What a day', author: 'me', url: 'http://what.com', likes: 9 })
+
+    sandbox.blog = blog.body
+
+    const blogs = await api
+      .get('/api/blogs')
+
+    sandbox.blogs = blogs
   })
 
   test('succeeds with status code 204 if id is valid', async() => {
-    const blogsAtStart = await helper.blogsInDb()
-    const blogToDelete = blogsAtStart[0]
+    const blogToDelete = sandbox.blog
+    const blogsBefore = sandbox.blogs
 
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
@@ -154,21 +176,32 @@ describe('deletion of a blog', () => {
 
     const blogsAtEnd = await helper.blogsInDb()
 
-    expect(blogsAtEnd).toHaveLength(
-      helper.initialBlogs.length - 1
-    )
+    expect(blogsAtEnd).toHaveLength(blogsBefore.length - 1)
   })
 
   test('fails with status code 401 if token is not provided', async () => {
-    const blogsAtStart = await helper.blogsInDb()
-    const blogToDelete = blogsAtStart[0]
+    const blogToDelete = sandbox.blog
+    const blogsBefore = sandbox.blogs
 
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
       .expect(401)
 
     const blogsAtEnd = await helper.blogsInDb()
-    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+    expect(blogsAtEnd).toHaveLength(blogsBefore.length)
+  })
+
+  test('fails with status code 401 if token does not match creator of blog', async () => {
+    const blogToDelete = sandbox.blog
+    const blogsBefore = sandbox.blogs
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${sandbox.user2.token}`)
+      .expect(401)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    expect(blogsAtEnd).toHaveLength(blogsBefore.length)
   })
 })
 
