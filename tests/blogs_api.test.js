@@ -162,7 +162,7 @@ describe('deletion of a blog', () => {
     const blogs = await api
       .get('/api/blogs')
 
-    sandbox.blogs = blogs
+    sandbox.blogs = blogs.body
   })
 
   test('succeeds with status code 204 if id is valid', async() => {
